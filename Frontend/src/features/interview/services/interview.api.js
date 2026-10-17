@@ -1,7 +1,14 @@
 import axios from "axios";
 
+// VITE_API_URL may point to `/api/auth` for the auth client or to the
+// backend origin. Interview endpoints share the same server, under `/api/interview`.
+const configuredApiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
+const backendBaseUrl = configuredApiUrl
+    .replace(/\/api\/auth\/?$/, "")
+    .replace(/\/$/, "");
+
 const api = axios.create({
-    baseURL: `${import.meta.env.VITE_API_URL || "http://localhost:3000"}/api/interview`,
+    baseURL: `${backendBaseUrl}/api/interview`,
     withCredentials: true,
 });
 
