@@ -2,36 +2,55 @@ const userModel = require("../models/user.model")
 const bcrypt = require("bcryptjs")
 const jwt = require("jsonwebtoken")
 const tokenBlacklistModel = require("../models/blacklist.model")
+
+function setAuthCookie(res, token) {
+    const crossSite = process.env.COOKIE_CROSS_SITE === "true"
+    res.cookie("token", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production" || crossSite,
+        sameSite: crossSite ? "none" : "lax",
+        maxAge: 24 * 60 * 60 * 1000,
+        path: "/",
+    })
+}
 /**
  * @desc register user
  * @route POST /api/auth/register
  * @access public
  */ 
 async function registerUserController(req,res){
-    const {username,email,password} = req.body
+    const {username, password} = req.body
+    const normalizedUsername = typeof username === "string" ? username.trim() : ""
+    const email = typeof req.body.email === "string" ? req.body.email.trim().toLowerCase() : ""
 
-    if(!username || !email || !password){
+    if(!normalizedUsername || !email || typeof password !== "string" || !password){
         return res.status(400).json({message:"All Fields Are Required"})
     }
 
-    const isUserAlreadyExist = await userModel.findOne({
-        $or:[{username},{email}]
-    })
+    const isUserAlreadyExist = await userModel.findOne({ $or:[{username: normalizedUsername},{email}] })
 
     if(isUserAlreadyExist){
-        /*isUser Already Exists.username ==  username*/
-        return res.status(400).json({message:"User Already Exist"})
+        return res.status(409).json({message: isUserAlreadyExist.email === email
+            ? "An account with this email already exists. Please sign in."
+            : "This username is already taken."})
     }
     const hash = await bcrypt.hash(password,10)
 
-    const user = await userModel.create({
-        username,
-        email,
-        password:hash
-    })
+    let user
+    try {
+        user = await userModel.create({ username: normalizedUsername, email, password:hash })
+    } catch (error) {
+        if (error.code === 11000) {
+            const field = Object.keys(error.keyPattern || {})[0]
+            return res.status(409).json({message: field === "email"
+                ? "An account with this email already exists. Please sign in."
+                : "This username is already taken."})
+        }
+        throw error
+    }
 
     const token = jwt.sign({id:user._id,username: user.username},process.env.JWT_SECRET,{expiresIn:"1d"})
-    res.cookie("token",token)
+    setAuthCookie(res, token)
     res.status(201).json({message:"User Registered Successfully",user:{
         id:user._id,
         username:user.username,
@@ -46,7 +65,11 @@ async function registerUserController(req,res){
  * @access public
  */
 async function loginUserController(req,res){
-    const {email,password} = req.body
+    const email = typeof req.body.email === "string" ? req.body.email.trim().toLowerCase() : ""
+    const {password} = req.body
+    if (!email || typeof password !== "string" || !password) {
+        return res.status(400).json({message:"Email and password are required"})
+    }
     const user = await userModel.findOne({email})
 
     if( !user){
@@ -59,7 +82,7 @@ async function loginUserController(req,res){
     }
 
     const token = jwt.sign({id:user._id,username: user.username},process.env.JWT_SECRET,{expiresIn:"1d"})
-    res.cookie("token",token)
+    setAuthCookie(res, token)
     res.status(200).json({message:"User Logged In Successfully",user:{
         id:user._id,
         username:user.username,
@@ -77,7 +100,13 @@ async function logoutUserController(req,res){
     if(token){
         await tokenBlacklistModel.create({token})
     }
-    res.clearCookie("token")
+    const crossSite = process.env.COOKIE_CROSS_SITE === "true"
+    res.clearCookie("token", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production" || crossSite,
+        sameSite: crossSite ? "none" : "lax",
+        path: "/",
+    })
     res.status(200).json({message:"User Logged Out Successfully"})
     
 }

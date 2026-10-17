@@ -21,6 +21,11 @@ main {
         }
     }
 
+    .auth-error {
+        margin: 0 0 1rem;
+        color: #ff6b6b;
+    }
+
     form {
         width: 100%;
         display: flex;

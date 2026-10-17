@@ -6,11 +6,18 @@ const app = express()
 
 app.use(express.json())
 app.use(cookieParser())
+const allowedOrigins = (process.env.FRONTEND_ORIGINS || "https://interview-ai-five-tan.vercel.app,http://localhost:5173")
+    .split(",")
+    .map((origin) => origin.trim().replace(/\/$/, ""))
+    .filter(Boolean)
+
 app.use(cors({
-    origin: [
-        "https://interview-ai-five-tan.vercel.app",
-        "http://localhost:5173"
-    ],
+    origin(origin, callback) {
+        if (!origin || allowedOrigins.includes(origin.replace(/\/$/, ""))) {
+            return callback(null, true)
+        }
+        return callback(new Error("Origin is not allowed by CORS"))
+    },
     credentials: true
 }))
 /**

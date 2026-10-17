@@ -12,7 +12,7 @@ function Register() {
   const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  const { loading, handleRegister } = useAuth();
+  const { loading, handleRegister, authError } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -32,7 +32,7 @@ function Register() {
     if (success) {
       navigate('/home');
     } else {
-      setErrorMsg('Registration failed. The email address may already be in use.');
+      setErrorMsg(authError || 'Unable to create your account. Check your connection and try again.');
     }
   };
 

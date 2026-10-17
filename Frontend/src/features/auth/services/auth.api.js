@@ -1,7 +1,15 @@
 import axios from "axios";
 
+const configuredApiUrl = import.meta.env.VITE_API_URL || "/api/auth";
+const normalizedApiUrl = configuredApiUrl.replace(/\/$/, "");
+const authApiUrl = normalizedApiUrl.endsWith("/api/auth")
+    ? normalizedApiUrl
+    : `${normalizedApiUrl}/api/auth`;
+
 const api = axios.create({
-    baseURL: "http://localhost:3000/api/auth",
+    // Set VITE_API_URL to the deployed backend origin (or full /api/auth URL).
+    // The relative fallback keeps same-origin deployments working.
+    baseURL: authApiUrl,
     withCredentials: true,
 });
 
@@ -28,7 +36,7 @@ export async function login({email, password}) {
 
 export async function logout() {
     try{
-        const response = await api.post("/logout")
+        const response = await api.get("/logout")
         return response.data;
     }catch(error){
         console.log("Error during logout:", error);

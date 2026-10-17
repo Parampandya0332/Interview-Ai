@@ -8,6 +8,7 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [authInitialized, setAuthInitialized] = useState(true);
+    const [authError, setAuthError] = useState("");
     useEffect(() => {
         const getAndsetUser = async () => {
             try {
@@ -32,7 +33,9 @@ export const AuthProvider = ({ children }) => {
                 setUser,
                 loading,
                 setLoading,
-                authInitialized
+                authInitialized,
+                authError,
+                setAuthError
             }}
         >
             {children}

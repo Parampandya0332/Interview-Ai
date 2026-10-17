@@ -8,6 +8,8 @@ const userSchema = new mongoose.Schema({
     },
     email:{
         type: String,
+        lowercase: true,
+        trim: true,
         unique: [true,"Account Already Taken With This Email Address"],
         required:true,
     },
