@@ -5,7 +5,7 @@ import Navbar from '../../../components/Navbar.jsx';
 import { Lock, Mail, Eye, EyeOff, ArrowRight } from 'lucide-react';
 
 function Login() {
-  const { handleLogin, loading } = useAuth();
+  const { handleLogin, loading, authError } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -25,7 +25,7 @@ function Login() {
     if (success) {
       navigate('/home');
     } else {
-      setErrorMsg('Invalid credentials. Please verify your email and password.');
+      setErrorMsg(authError || 'Unable to sign in. Check your connection and credentials.');
     }
   };
 

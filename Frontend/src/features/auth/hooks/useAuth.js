@@ -14,11 +14,14 @@ export const useAuth = () => {
         user,
         setUser,
         loading,
-        setLoading
+        setLoading,
+        authError,
+        setAuthError
     } = context;
 
     const handleLogin = async ({ email, password }) => {
         setLoading(true);
+        setAuthError("");
 
         try {
             const data = await login({ email, password });
@@ -28,6 +31,7 @@ export const useAuth = () => {
             return true;
         } catch (error) {
             console.error("Login failed:", error);
+            setAuthError(error.response?.data?.message || "Unable to sign in. Check your connection and try again.");
 
             return false;
         } finally {
@@ -37,6 +41,7 @@ export const useAuth = () => {
 
     const handleRegister = async ({ username, email, password }) => {
         setLoading(true);
+        setAuthError("");
 
         try {
             const data = await register({
@@ -50,6 +55,7 @@ export const useAuth = () => {
             return true;
         } catch (error) {
             console.error("Registration failed:", error);
+            setAuthError(error.response?.data?.message || "Unable to create your account. Check your connection and try again.");
 
             return false;
         } finally {
@@ -77,6 +83,7 @@ export const useAuth = () => {
         setUser,
         loading,
         setLoading,
+        authError,
         handleLogin,
         handleRegister,
         handleLogout
