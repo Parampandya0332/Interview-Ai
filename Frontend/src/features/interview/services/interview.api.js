@@ -25,7 +25,9 @@ export async function generateInterviewReport({ resumeFile, selfDescription, job
     formData.append("selfDescription", selfDescription || "");
     formData.append("jobDescription", jobDescription || "");
 
-    const response = await api.post("/", formData, {
+    // Keep the URL at /api/interview without a trailing slash. The Vercel
+    // rewrite forwards that route, while /api/interview/ currently returns 404.
+    const response = await api.post("", formData, {
         headers: {
             "Content-Type": "multipart/form-data",
         },
